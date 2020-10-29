@@ -1,6 +1,6 @@
 # This file is part of the pyI2C_MP_USB project.
 #
-# Copyright(c) 2019 Thomas Fischl (https://www.fischl.de)
+# Copyright(c) 2019-2020 Thomas Fischl (https://www.fischl.de)
 # 
 # pyI2C_MP_USB is free software: you can redistribute it and/or modify
 # it under the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by
@@ -137,6 +137,22 @@ class I2C_MP_USB(object):
             raise I2C_MP_USBTransmitException()
 
 
+    def read_i2c_block_raw(self, i2c_addr, length):
+        """
+        Read a block of byte data.
+        :param i2c_addr: i2c address
+        :type i2c_addr: int
+        :param length: Desired block length
+        :type length: int
+        :return: List of bytes
+        :rtype: list
+        """
+        try:
+            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, length)
+            return data
+        except usb1.USBErrorPipe:
+            raise I2C_MP_USBTransmitException()
+
 
     def write_byte(self, i2c_addr, value):
         """
@@ -198,6 +214,21 @@ class I2C_MP_USB(object):
         """
         try:
             self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, [register] + data)
+        except usb1.USBErrorPipe:
+            raise I2C_MP_USBTransmitException()
+
+
+    def write_i2c_block_raw(self, i2c_addr, data):
+        """
+        Write a block of byte data.
+        :param i2c_addr: i2c address
+        :type i2c_addr: int
+        :param data: List of bytes
+        :type data: list
+        :rtype: None
+        """
+        try:
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, data)
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
 
