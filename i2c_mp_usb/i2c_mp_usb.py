@@ -1,6 +1,6 @@
 # This file is part of the pyI2C_MP_USB project.
 #
-# Copyright(c) 2019-2020 Thomas Fischl (https://www.fischl.de)
+# Copyright(c) 2019-2021 Thomas Fischl (https://www.fischl.de)
 # 
 # pyI2C_MP_USB is free software: you can redistribute it and/or modify
 # it under the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by
@@ -231,6 +231,31 @@ class I2C_MP_USB(object):
             self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, data)
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
+
+
+    def probe_device(self, i2c_addr):
+        """
+        Probe given address if a device answers.
+        :param i2c_addr: i2c address
+        :type i2c_addr: int
+        :return: True if device is available
+        :rtype: bool
+        """
+        try:
+            if (i2c_addr >= 0x30 and i2c_addr <= 0x37) or (i2c_addr >= 0x50 and i2c_addr <= 0x5F):
+	            self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, 1)
+            else:
+                self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, [])
+
+            status = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_GET_STATUS, 0, 0, 1)
+
+            if len(status) != 1:
+                raise I2C_MP_USBTransmitException()
+
+        except usb1.USBErrorPipe:
+            raise I2C_MP_USBTransmitException()
+
+        return status[0] == 1
 
 
     def set_baudrate(self, baudrate):

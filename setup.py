@@ -1,6 +1,6 @@
 # This file is part of the pyI2C_MP_USB project.
 #
-# Copyright(c) 2019-2020 Thomas Fischl (https://www.fischl.de)
+# Copyright(c) 2019-2021 Thomas Fischl (https://www.fischl.de)
 # 
 # pyI2C_MP_USB is free software: you can redistribute it and/or modify
 # it under the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by
@@ -22,11 +22,11 @@ def readme():
         return f.read()
 
 setup(name='i2c_mp_usb',
-      version='1.1',
+      version='1.2',
       description='I2C-MP-USB - USB to I2C interface',
       long_description=readme(),
       classifiers=[
-          'Development Status :: 3 - Alpha',
+          'Development Status :: 5 - Production/Stable',
           'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3.5'
