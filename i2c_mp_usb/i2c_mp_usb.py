@@ -1,6 +1,6 @@
 # This file is part of the pyI2C_MP_USB project.
 #
-# Copyright(c) 2019-2021 Thomas Fischl (https://www.fischl.de)
+# Copyright(c) 2019-2022 Thomas Fischl (https://www.fischl.de)
 # 
 # pyI2C_MP_USB is free software: you can redistribute it and/or modify
 # it under the terms of the GNU LESSER GENERAL PUBLIC LICENSE as published by
@@ -18,22 +18,22 @@
 import libusb1
 import usb1
 
-CMD_ECHO = 0
-CMD_GET_FUNC = 1
-CMD_SET_DELAY = 2
-CMD_GET_STATUS = 3
-CMD_I2C_IO = 4
-CMD_I2C_IO_BEGIN = 1
-CMD_I2C_IO_END = 2
-CMD_START_BOOTLOADER = 0x10
-CMD_SET_BAUDRATE = 0x11
-
-I2C_M_RD = 0x01
-
-I2C_MP_USB_VID = 0x0403
-I2C_MP_USB_PID = 0xc631
-
 class I2C_MP_USB(object):
+
+    CMD_ECHO = 0
+    CMD_GET_FUNC = 1
+    CMD_SET_DELAY = 2
+    CMD_GET_STATUS = 3
+    CMD_I2C_IO = 4
+    CMD_I2C_IO_BEGIN = 1
+    CMD_I2C_IO_END = 2
+    CMD_START_BOOTLOADER = 0x10
+    CMD_SET_BAUDRATE = 0x11
+
+    I2C_M_RD = 0x01
+
+    I2C_MP_USB_VID = 0x0403
+    I2C_MP_USB_PID = 0xc631
 
     def __init__(self, serialnumber = None):
         """
@@ -59,11 +59,17 @@ class I2C_MP_USB(object):
         ctx = usb1.LibUSBContext()
 
         for device in ctx.getDeviceIterator():
-            if device.getVendorID() == I2C_MP_USB_VID and device.getProductID() == I2C_MP_USB_PID:
+            if device.getVendorID() == self.I2C_MP_USB_VID and device.getProductID() == self.I2C_MP_USB_PID:
                 if serialnumber is None:
                     return device
                 elif device.getSerialNumber() == serialnumber:
                     return device        
+
+    def close(self):
+        """
+        Close connection to I2C_MP_USB.
+        """
+        self.usbdev.close()
 
     def read_byte(self, i2c_addr):
         """
@@ -74,12 +80,11 @@ class I2C_MP_USB(object):
         :return: Read byte value
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN, 0, i2c_addr, [])
-            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, 1)
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN, 0, i2c_addr, [])
+            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_END, self.I2C_M_RD, i2c_addr, 1)
             return data[0]
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def read_byte_data(self, i2c_addr, register):
         """
@@ -92,12 +97,11 @@ class I2C_MP_USB(object):
         :rtype: int
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN, 0, i2c_addr, [register])
-            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, 1)
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN, 0, i2c_addr, [register])
+            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_END, self.I2C_M_RD, i2c_addr, 1)
             return data[0]
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def read_word_data(self, i2c_addr, register):
         """
@@ -110,12 +114,11 @@ class I2C_MP_USB(object):
         :rtype: int
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN, 0, i2c_addr, [register])
-            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, 2)
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN, 0, i2c_addr, [register])
+            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_END, self.I2C_M_RD, i2c_addr, 2)
             return data[0] | (data[1] << 8)
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def read_i2c_block_data(self, i2c_addr, register, length):
         """
@@ -130,12 +133,11 @@ class I2C_MP_USB(object):
         :rtype: list
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN, 0, i2c_addr, [register])
-            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, length)
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN, 0, i2c_addr, [register])
+            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_END, self.I2C_M_RD, i2c_addr, length)
             return data
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def read_i2c_block_raw(self, i2c_addr, length):
         """
@@ -148,11 +150,10 @@ class I2C_MP_USB(object):
         :rtype: list
         """
         try:
-            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, length)
+            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, self.I2C_M_RD, i2c_addr, length)
             return data
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def write_byte(self, i2c_addr, value):
         """
@@ -163,10 +164,9 @@ class I2C_MP_USB(object):
         :type value: int
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, [value])
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, 0, i2c_addr, [value])
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def write_byte_data(self, i2c_addr, register, value):
         """
@@ -180,7 +180,7 @@ class I2C_MP_USB(object):
         :rtype: None
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, [register, value])
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, 0, i2c_addr, [register, value])
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
 
@@ -196,10 +196,9 @@ class I2C_MP_USB(object):
         :rtype: None
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, [register, value & 0xff, (value >> 8) & 0xff])
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, 0, i2c_addr, [register, value & 0xff, (value >> 8) & 0xff])
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def write_i2c_block_data(self, i2c_addr, register, data):
         """
@@ -213,10 +212,9 @@ class I2C_MP_USB(object):
         :rtype: None
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, [register] + data)
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, 0, i2c_addr, [register] + data)
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
-
 
     def write_i2c_block_raw(self, i2c_addr, data):
         """
@@ -228,10 +226,27 @@ class I2C_MP_USB(object):
         :rtype: None
         """
         try:
-            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, data)
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, 0, i2c_addr, data)
         except usb1.USBErrorPipe:
             raise I2C_MP_USBTransmitException()
 
+    def write_read_i2c_block_raw(self, i2c_addr, wdata, length):
+        """
+        First write then read a block of byte data.
+        :param i2c_addr: i2c address
+        :type i2c_addr: int
+        :param wdata: List of bytes to write
+        :type wdata: list
+        :param length: Desired read block length
+        :type length: int
+        :rtype: None
+        """
+        try:
+            self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN, 0, i2c_addr, wdata)
+            data = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_END, self.I2C_M_RD, i2c_addr, length)
+            return data
+        except usb1.USBErrorPipe:
+            raise I2C_MP_USBTransmitException()
 
     def probe_device(self, i2c_addr):
         """
@@ -243,11 +258,11 @@ class I2C_MP_USB(object):
         """
         try:
             if (i2c_addr >= 0x30 and i2c_addr <= 0x37) or (i2c_addr >= 0x50 and i2c_addr <= 0x5F):
-	            self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, I2C_M_RD, i2c_addr, 1)
+	            self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, self.I2C_M_RD, i2c_addr, 1)
             else:
-                self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_I2C_IO + CMD_I2C_IO_BEGIN + CMD_I2C_IO_END, 0, i2c_addr, [])
+                self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_I2C_IO + self.CMD_I2C_IO_BEGIN + self.CMD_I2C_IO_END, 0, i2c_addr, [])
 
-            status = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, CMD_GET_STATUS, 0, 0, 1)
+            status = self.usbhandle.controlRead(libusb1.LIBUSB_TYPE_CLASS, self.CMD_GET_STATUS, 0, 0, 1)
 
             if len(status) != 1:
                 raise I2C_MP_USBTransmitException()
@@ -257,20 +272,19 @@ class I2C_MP_USB(object):
 
         return status[0] == 1
 
-
     def set_baudrate(self, baudrate):
         """
         Set I2C baudrate in kHz
         :param baudrate: I2C clock frequency in kHz
         :type period: int
         """
-        self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_SET_BAUDRATE, baudrate, 0, [])        
+        self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_SET_BAUDRATE, baudrate, 0, [])        
 
     def start_bootloader(self):
         """
         Jump to bootloader.
         """
-        self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, CMD_START_BOOTLOADER, 0x5237, 0, [])        
+        self.usbhandle.controlWrite(libusb1.LIBUSB_TYPE_CLASS, self.CMD_START_BOOTLOADER, 0x5237, 0, [])        
 
 
 class I2C_MP_USBException(Exception):
